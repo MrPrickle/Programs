@@ -2,124 +2,59 @@
 
 using namespace std;
 
+const int MAX_N = 100;
 
 ifstream fin("measurement.in");
 ofstream fout("measurement.out");
 
-struct cow {
-    string name;
-    int change;
-};
+int changes[3][MAX_N + 1]; // Cow C, Day D
+int rates[3][MAX_N + 1];
+
+bool isHighest(int c, int d) {
+    int highest = max(max(rates[0][d], rates[1][d]), rates[2][d]);
+    return rates[c][d] == highest;
+}
 
 int main() {
-    ios::sync_with_stdio(0);
-    cin.tie(0);
-    
     int n;
     fin >> n;
-    map <int, cow> input;
-    map <string, int> cows;
 
+    int change = 0;
 
     for (int i = 0; i < n; i++) {
-        cow temp;
         int d;
-        string n;
-        int c;
-        fin >> d >> n >> c;
-        temp.name = n;
-        temp.change = c;
-        input[d] = temp;
-
-        cows[n] = 0;
+        string c;
+        int name = 0;
+        int delta;
+        fin >> d >> c >> delta;
+        if (c == "Mildred") {
+            name = 0;
+        }
+        else if (c == "Elsie") {
+            name = 1;
+        }
+        else {
+            name = 2;
+        }
+        changes[name][d] = delta;
     }
 
-    set <string> leaders;
-    set <string> lastLeaders;
-    int leaderAmt = INT_MIN;
-    int lastLeaderAmt = INT_MIN;
-    int timesChanged = 0;
+    for (int i = 0; i < 3; i++) {
+        rates[i][0] = 7;
+    }
 
-    for (auto it = input.begin(); it != input.end(); it++) {
-        cows[it->second.name] += it->second.change;
-        if (cows[it->second.name] > leaderAmt && leaders.count(it->second.name) && leaders.size() > 1) {
-            cout << "case 1" << "\n";
-            lastLeaders = leaders;
-            lastLeaderAmt = leaderAmt;
-            leaderAmt = max(leaderAmt, cows[it->second.name]);
-            set <string> newSet;
-            leaders = newSet;
-            if (leaders.insert(it->second.name).second) {
-                timesChanged++;
-            }
-            else {
-                ; // Already leader
-            }
-        }
-        else if (cows[it->second.name] > leaderAmt && leaders.count(it->second.name) && leaders.size() == 1) {
-            cout << "case 2" << "\n";
-            set <string> newSet;
-            leaders = newSet;
-            lastLeaderAmt = leaderAmt;
-            leaderAmt = max(leaderAmt, cows[it->second.name]);
-            if (leaders.insert(it->second.name).second) {
-                ;
-            }
-            else {
-                ; // Already leader
-            }
-        }
-        else if (cows[it->second.name] > leaderAmt) {
-            cout << "case 3" << "\n";
-            if (!(it == input.begin())) {
-                lastLeaders = leaders;
-                lastLeaderAmt = leaderAmt;
-            }
-            set <string> newSet;
-            leaders = newSet;
-            if (leaders.insert(it->second.name).second) {
-                timesChanged++;
-                leaderAmt = max(leaderAmt, cows[it->second.name]);
-            }
-            else {
-                ; // Already leader
-            }
-            if (it == input.begin()) {
-                lastLeaders = leaders;
-                lastLeaderAmt = leaderAmt;
-            }
-        }
-        else if (cows[it->second.name] == leaderAmt) {
-            cout << "case 4" << "\n";
-            lastLeaders = leaders;
-            if (leaders.insert(it->second.name).second) {
-                timesChanged++;
-                leaderAmt = max(leaderAmt, cows[it->second.name]);
-            }
-            else {
-                ; // Already leader
-            }
-        }
-        else if (it->second.change < 0 && leaders.count(it->second.name) && leaders.size() > 1) {
-            cout << "case 5" << "\n";
-            lastLeaders = leaders;
-            leaders.erase(it->second.name);
-            timesChanged++;
-        }
-        else if (it->second.change < 0 && leaders.count(it->second.name) && leaders.size() == 1) {
-            cout << "case 6" << "\n";
-            if (cows[it->second.name] <= lastLeaderAmt) {
-                timesChanged++;
-                leaders = lastLeaders;
-                leaderAmt = lastLeaderAmt;
-            }
-            else {
-                leaderAmt = cows[it->second.name];
-            }
+    for (int c = 0; c < 3; c++) {
+        for (int d = 1; d <= 100; d++) {
+            rates[c][d] = rates[c][d - 1] + changes[c][d];
         }
     }
 
-    fout << timesChanged << "\n";
+    for (int d = 1; d <= 100; d++) {
+        if (isHighest(0, d - 1) != isHighest(0, d) || isHighest(1, d - 1) != isHighest(1, d) || isHighest(2, d - 1) != isHighest(2, d)) {
+            change++;
+        }
+    }
 
-    return 0;
+    fout << change << endl;
+
 }
